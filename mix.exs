@@ -42,7 +42,7 @@ defmodule Scrivener.Ecto.Mixfile do
   defp deps do
     [
       {:scrivener, "~> 2.4"},
-      {:ecto, "~> 2.0"},
+      {:ecto, "~> 2.2"},
       {:dialyxir, "~> 0.5.0", only: :dev},
       {:earmark, ">= 0.0.0", only: :dev},
       {:ex_doc, "~> 0.18.0", only: :dev},

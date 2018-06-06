@@ -1,7 +1,7 @@
 defmodule Scrivener.Paginator.Ecto.QueryTest do
   use Scrivener.Ecto.TestCase
 
-  alias Scrivener.Ecto.{Comment, KeyValue, Post}
+  alias Scrivener.Ecto.{Comment, Post}
 
   defp create_posts do
     unpublished_post =
@@ -25,16 +25,6 @@ defmodule Scrivener.Paginator.Ecto.QueryTest do
         title: "Title #{i}",
         body: "Body #{i}",
         published: true
-      }
-      |> Scrivener.Ecto.Repo.insert!()
-    end)
-  end
-
-  defp create_key_values do
-    Enum.map(1..10, fn i ->
-      %KeyValue{
-        key: "key_#{i}",
-        value: rem(i, 2) |> to_string
       }
       |> Scrivener.Ecto.Repo.insert!()
     end)
@@ -106,13 +96,13 @@ defmodule Scrivener.Paginator.Ecto.QueryTest do
     test "it handles complex order_by" do
       create_posts()
 
-      page =
-        Post
+      post_query = Post
         |> select([p], fragment("? as aliased_title", p.title))
         |> order_by([p], fragment("aliased_title"))
-        |> Scrivener.Ecto.Repo.paginate()
-
-      assert page.total_entries == 7
+      msg = "Passed query MUST NOT have column aliases defined in fragments!"
+      assert_raise ArgumentError, msg, fn ->
+          Scrivener.Ecto.Repo.paginate(post_query)
+        end
     end
 
     test "can be provided the current page and page size as a params map" do
@@ -239,18 +229,6 @@ defmodule Scrivener.Paginator.Ecto.QueryTest do
       assert page.entries == posts
     end
 
-    test "can be used on a table with any primary key" do
-      create_key_values()
-
-      page =
-        KeyValue
-        |> KeyValue.zero()
-        |> Scrivener.Ecto.Repo.paginate(page_size: 2)
-
-      assert page.total_entries == 5
-      assert page.total_pages == 3
-    end
-
     test "can be used with a group by clause" do
       create_posts()
 
@@ -314,6 +292,7 @@ defmodule Scrivener.Paginator.Ecto.QueryTest do
       page =
         Post
         |> Post.published()
+        |> order_by([p], p.id)
         |> Scrivener.paginate(config)
 
       assert page.page_size == 4
@@ -328,6 +307,7 @@ defmodule Scrivener.Paginator.Ecto.QueryTest do
       page =
         Post
         |> Post.published()
+        |> order_by([p], p.id)
         |> Scrivener.paginate(module: Scrivener.Ecto.Repo, page: 2, page_size: 4)
 
       assert page.page_size == 4
@@ -342,6 +322,7 @@ defmodule Scrivener.Paginator.Ecto.QueryTest do
       page =
         Post
         |> Post.published()
+        |> order_by([p], p.id)
         |> Scrivener.paginate(%{"module" => Scrivener.Ecto.Repo, "page" => 2, "page_size" => 4})
 
       assert page.page_size == 4
