@@ -18,7 +18,6 @@ defimpl Scrivener.Paginater, for: Ecto.Query do
       Keyword.get_lazy(options, :total_entries, fn -> total_entries(query, repo, caller) end)
 
     total_pages = total_pages(total_entries, page_size)
-    page_number = min(total_pages, page_number)
 
     %Page{
       page_size: page_size,
